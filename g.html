@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Moon Clicker</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,Segoe UI,Arial;background:#0b0f19;color:#eef2ff}
+    .wrap{max-width:900px;margin:0 auto;padding:20px}
+    .card{border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.05);border-radius:18px;padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#eef2ff;padding:10px 12px;border-radius:12px;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.10)}
+    .big{font-size:34px;font-weight:900;margin:0}
+    .muted{color:#c7cbe3}
+    .center{display:grid;place-items:center;text-align:center;gap:10px}
+    .moon{width:180px;height:180px;border-radius:40px;background:linear-gradient(135deg,#ffe8a3,#b58bff);display:grid;place-items:center;color:#111;font-size:64px;font-weight:900;user-select:none}
+    .shop{display:grid;gap:10px;margin-top:12px}
+    .item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px;border-radius:14px;background:rgba(0,0,0,.20);border:1px solid rgba(255,255,255,.08)}
+    .tag{font-size:12px;color:#c7cbe3}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card center">
+      <h1 class="big">Moon Clicker 🌙</h1>
+      <div class="muted">Click the moon to earn points. Buy upgrades to earn faster.</div>
+      <div class="moon" id="moon">🌙</div>
+      <div class="row" style="justify-content:center">
+        <div class="card" style="min-width:240px">
+          <div class="muted">Points</div>
+          <div class="big" id="points">0</div>
+          <div class="tag">Per click: <span id="perClick">1</span> | Auto/sec: <span id="auto">0</span></div>
+        </div>
+        <div class="card" style="min-width:240px">
+          <div class="muted">Goal</div>
+          <div class="big" id="goal">200</div>
+          <div class="tag" id="status">Keep going!</div>
+        </div>
+      </div>
+
+      <div class="card" style="width:100%;text-align:left">
+        <h3 style="margin:0">Shop</h3>
+        <div class="shop" id="shop"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  let points = 0;
+  let perClick = 1;
+  let auto = 0;
+  let goal = 200;
+
+  const upgrades = [
+    {id:"u1", name:"Better Click", desc:"+1 per click", cost:20, apply:()=>perClick+=1},
+    {id:"u2", name:"Moon Assistant", desc:"+1 auto/sec", cost:60, apply:()=>auto+=1},
+    {id:"u3", name:"Super Click", desc:"+5 per click", cost:140, apply:()=>perClick+=5},
+    {id:"u4", name:"Auto Factory", desc:"+5 auto/sec", cost:300, apply:()=>auto+=5},
+  ];
+
+  const elPoints = document.getElementById("points");
+  const elPerClick = document.getElementById("perClick");
+  const elAuto = document.getElementById("auto");
+  const elGoal = document.getElementById("goal");
+  const elStatus = document.getElementById("status");
+  const elShop = document.getElementById("shop");
+
+  function render(){
+    elPoints.textContent = Math.floor(points);
+    elPerClick.textContent = perClick;
+    elAuto.textContent = auto;
+    elGoal.textContent = goal;
+
+    if(points >= goal){
+      elStatus.textContent = "✅ You reached the goal! New goal unlocked.";
+      goal = Math.floor(goal * 1.5);
+    } else {
+      elStatus.textContent = "Keep going!";
+    }
+
+    elShop.innerHTML = "";
+    for(const u of upgrades){
+      const disabled = points < u.cost;
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div>
+          <div style="font-weight:800">${u.name}</div>
+          <div class="tag">${u.desc} • Cost: ${u.cost}</div>
+        </div>
+        <button class="btn" ${disabled ? "disabled" : ""} style="${disabled ? "opacity:.5;cursor:not-allowed" : ""}" data-buy="${u.id}">
+          Buy
+        </button>
+      `;
+      elShop.appendChild(div);
+    }
+
+    document.querySelectorAll("[data-buy]").forEach(btn=>{
+      btn.onclick = () => buy(btn.getAttribute("data-buy"));
+    });
+  }
+
+  function buy(id){
+    const u = upgrades.find(x=>x.id===id);
+    if(!u) return;
+    if(points < u.cost) return;
+    points -= u.cost;
+    u.apply();
+    // make it a bit harder next time
+    u.cost = Math.floor(u.cost * 1.35);
+    render();
+  }
+
+  document.getElementById("moon").addEventListener("click", ()=>{
+    points += perClick;
+    render();
+  });
+
+  setInterval(()=>{
+    points += auto;
+    render();
+  }, 1000);
+
+  render();
+</script>
+</body>
+</html>
